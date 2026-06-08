@@ -101,4 +101,4 @@
 \contentsline {section}{СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ}{85}{Item.221}%
 \contentsline {section}{ПРИЛОЖЕНИЕ А\ Представление графического материала}{92}{section*.28}%
 \contentsline {section}{ПРИЛОЖЕНИЕ Б\ Фрагменты исходного кода программы}{103}{section*.39}%
-\contentsline {section}{На отдельных листах (CD-RW в прикрепленном конверте)}{154}{lstnumber.-10.325}%
+\contentsline {section}{На отдельных листах (CD-RW в прикрепленном конверте)}{119}{lstnumber.-8.325}%
