@@ -1,0 +1,10 @@
+const basePricePerDay = Number(currentRentalItem?.price_per_day || 0);
+const platformMarkupRate = 0.20;
+const pricePerDayWithMarkup =
+    Math.round(basePricePerDay * (1 + platformMarkupRate) * 100) / 100;
+const rentAmountWithMarkup = pricePerDayWithMarkup * days;
+const bookingFeeRate = 0.05;
+const bookingFee =
+    Math.round(rentAmountWithMarkup * bookingFeeRate * 100) / 100;
+const deposit = Number(currentRentalItem?.deposit ?? 0);
+const total = rentAmountWithMarkup + bookingFee + deposit;

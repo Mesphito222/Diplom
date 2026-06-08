@@ -1,0 +1,25 @@
+async function signContractWithDemoEds(contractId, signerName,
+                                        certificatePin) {
+    try {
+        const response = await apiRequest(
+            `/contracts/${contractId}/sign/`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    signer_name: signerName,
+                    certificate_pin: certificatePin,
+                })
+            }
+        );
+        if (!response.ok) {
+            const message = await readApiError(response,
+                'Не удалось подписать договор.');
+            return { success: false, data: { error: message } };
+        }
+        const data = await response.json().catch(() => ({}));
+        return { success: response.ok, data };
+    } catch (error) {
+        return { success: false,
+            data: { error: 'Ошибка подключения.' } };
+    }
+}

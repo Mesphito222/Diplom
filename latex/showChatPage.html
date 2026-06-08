@@ -1,0 +1,21 @@
+const token = getAccessToken();
+const wsUrl = `${WS_BASE}/chat/${conversationId}/?token=${token}`;
+if (wsConnection) wsConnection.close();
+wsConnection = new WebSocket(wsUrl);
+
+wsConnection.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.event === 'new_message' && data.message) {
+        const message = data.message;
+        messagesContainer.insertAdjacentHTML(
+            'beforeend',
+            renderSingleMessage(
+                message,
+                message.sender_id == localStorage.getItem('user_id')
+            )
+        );
+        messagesContainer.scrollTop =
+            messagesContainer.scrollHeight;
+        refreshNavCounters();
+    }
+};

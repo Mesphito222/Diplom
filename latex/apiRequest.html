@@ -1,0 +1,19 @@
+async function apiRequest(endpoint, options = {}) {
+    const url = `${API_BASE}${endpoint}`;
+    const headers = { ...options.headers };
+    const token = getAccessToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
+    let response = await fetch(url, { ...options, headers });
+    if (response.status === 401 && !options._retry) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+            options._retry = true;
+            headers['Authorization'] = `Bearer ${getAccessToken()}`;
+            response = await fetch(url, { ...options, headers });
+        }
+    }
+    return response;
+}

@@ -1,0 +1,286 @@
+\section{Рабочий проект}
+\subsection{Спецификация функций и классов клиентской части}
+
+Клиентская часть веб-приложения реализована в виде единого HTML-документа (index.html) объёмом 7 626 строк, из которых 1 703 строки составляют описание стилей CSS, 5 610 строк — программный код на JavaScript, а оставшиеся строки — HTML-разметка. Код JavaScript размещён в одном тегe <script> и содержит 207 функций, из которых 79 являются асинхронными (async function), что соответствует модульному принципу, описанному в техническом проекте.
+
+Все функции сгруппированы по функциональной принадлежности согласно архитектуре, описанной в разделе 3. Таблица 4.1 содержит спецификацию основных функций клиентской части с указанием их назначения.
+
+
+\begin{xltabular}{\textwidth}{|c|X|X|}
+	\caption{Спецификация основных функций клиентской части \label{tab:spec_functions}}\\ \hline
+	\centrow № & \centrow Название функции & \centrow Описание \\ \hline
+	\endfirsthead
+	\continuecaption{Продолжение таблицы \ref{tab:spec_functions}}
+	\centrow № & \centrow Название функции & \centrow Описание \\ \hline
+	\finishhead
+	\leftrow 1 & \leftrow apiRequest(endpoint, options) & \leftrow Централизованная отправка HTTP-запросов через Fetch API с автоматическим добавлением JWT-токена в заголовок Authorization и автоматическим обновлением access-токена при получении ошибки 401. \\ \hline
+	\leftrow 2 & \leftrow refreshAccessToken() & \leftrow Обновление access-токена с помощью refresh-токена через endpoint /api/token/refresh/. При неудаче выполняет выход из аккаунта. \\ \hline
+	\leftrow 3 & \leftrow login(username, password) & \leftrow Аутентификация пользователя: отправка запроса к /api/token/, декодирование JWT-payload для извлечения user\_id, сохранение токенов и данных пользователя в localStorage. \\ \hline
+	\leftrow 4 & \leftrow register(...) & \leftrow Регистрация нового пользователя через /api/users/register/ с последующей автоматической авторизацией и поддержкой трёх типов аккаунта: физическое лицо, ИП, юридическое лицо. \\ \hline
+	\leftrow 5 & \leftrow setTokens(...) / clearTokens() & \leftrow Сохранение и очистка данных пользователя (токены, user\_id, email, user\_type, данные профиля) в localStorage. \\ \hline
+	\leftrow 6 & \leftrow loadProducts(page) & \leftrow Загрузка постраничного списка вещей с сервера (/api/items/), применение фильтра категории и поискового запроса, отображение карточек товаров. \\ \hline
+	\leftrow 7 & \leftrow renderProducts(products) & \leftrow Формирование HTML-разметки карточек вещей с учётом фильтрации по категории и доступности на выбранный период аренды. \\ \hline
+	\leftrow 8 & \leftrow openItemPreview(item) & \leftrow Открытие модального окна с подробной информацией о вещи, её рейтингом, отзывами и занятыми датами аренды. \\ \hline
+	\leftrow 9 & \leftrow createBookingRequest() & \leftrow Создание заявки на аренду через /api/bookings/ с проверкой дат, расчётом количества дней и обновлением сводки стоимости. \\ \hline
+	\leftrow 10 & \leftrow updateRentalSummary() & \leftrow Автоматический расчёт итоговой стоимости аренды: базовая цена, наценка платформы 20\%, комиссия бронирования 5\%, залог. \\ \hline
+	\leftrow 11 & \leftrow startBookingPayment() & \leftrow Инициализация демонстрационного платежа через СБП: обращение к /api/bookings/\{id\}/start\_payment/, отображение QR-данных и суммы в модальном окне. \\ \hline
+	\leftrow 12 & \leftrow confirmBookingPayment() & \leftrow Подтверждение демонстрационной оплаты, обновление статуса бронирования на paid. \\ \hline
+	\leftrow 13 & \leftrow signContractWithDemoEds(...) & \leftrow Подписание договора аренды демонстрационной ЭЦП через /api/contracts/\{id\}/sign/ с передачей имени подписанта и PIN-кода сертификата. \\ \hline
+	\leftrow 14 & \leftrow renderContractModal(contract) & \leftrow Отображение модального окна договора: номер договора, сводка по сделке, текст договора, кнопка скачивания PDF, состояние подписей обеих сторон. \\ \hline
+	\leftrow 15 & \leftrow showChatPage(conversationId) & \leftrow Открытие страницы переписки с загрузкой истории сообщений и установкой WebSocket-соединения по адресу /ws/chat/\{id\}/?token=... \\ \hline
+	\leftrow 16 & \leftrow sendChatMessageWithOptionalImage(...) & \leftrow Отправка сообщения в чат через REST API с поддержкой прикреплённого изображения (multipart/form-data). При активном WebSocket-соединении сообщение отображается через сокет. \\ \hline
+	\leftrow 17 & \leftrow connectNotificationsSocket() & \leftrow Подключение к WebSocket-каналу /ws/notifications/ для получения системных уведомлений в реальном времени с автоматическим переподключением при разрыве. \\ \hline
+	\leftrow 18 & \leftrow showMyItemsPage() & \leftrow Отображение страницы объявлений и статистики пользователя: количество объявлений, количество аренд, чистая прибыль, списки входящих и исходящих бронирований. \\ \hline
+	\leftrow 19 & \leftrow createItemWithImages(...) & \leftrow Создание объявления через /api/items/ с последующей загрузкой изображений через /api/items/upload-image/. \\ \hline
+	\leftrow 20 & \leftrow validateInnClient(val, type) & \leftrow Клиентская валидация ИНН с проверкой контрольных цифр для физических лиц (12 знаков) и юридических лиц (10 знаков) без обращения к серверу. \\ \hline
+	\leftrow 21 & \leftrow submitReview(...) & \leftrow Отправка отзыва по завершённому или оплаченному бронированию через /api/bookings/\{id\}/review/ с оценкой и текстовым комментарием. \\ \hline
+\end{xltabular}
+
+\subsection{Реализация ключевых фрагментов клиентской части}
+\subsubsection{Централизованный модуль взаимодействия с API}
+
+Все HTTP-запросы к серверной части выполняются через единую асинхронную функцию apiRequest, расположенную в блоке <script> файла index.html. Функция автоматически добавляет JWT-токен авторизации в заголовок каждого запроса и обеспечивает прозрачное обновление access-токена при получении ошибки 401 (Unauthorized). Фрагмент реализации представлен на рисунке~\ref{fig:api_request}.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=Html]
+	async function apiRequest(endpoint, options = {}) {
+		const url = `${API_BASE}${endpoint}`;
+		const headers = { ...options.headers };
+		const token = getAccessToken();
+		if (token) headers['Authorization'] = `Bearer ${token}`;
+		if (!(options.body instanceof FormData)) {
+			headers['Content-Type'] = 'application/json';
+		}
+		let response = await fetch(url, { ...options, headers });
+		if (response.status === 401 && !options._retry) {
+			const refreshed = await refreshAccessToken();
+			if (refreshed) {
+				options._retry = true;
+				headers['Authorization'] = `Bearer ${getAccessToken()}`;
+				response = await fetch(url, { ...options, headers });
+			}
+		}
+		return response;
+	}
+\end{lstlisting}  
+\caption{Функция apiRequest}
+\label{fig:api_request}
+\end{figure}
+
+Данный подход позволяет избежать дублирования кода авторизации в каждом модуле и обеспечивает единообразную обработку ошибок. Если сервер возвращает код 401 и запрос выполняется впервые (флаг \_retry не установлен), функция обращается к endpoint /api/token/refresh/ для получения нового access-токена и повторяет исходный запрос.
+
+\subsubsection{Модуль бронирования}
+
+Модуль бронирования реализован через функции updateRentalSummary и createBookingRequest. Функция updateRentalSummary вычисляет итоговую стоимость аренды на стороне клиента по следующей формуле: к базовой цене арендодателя добавляется наценка платформы в размере 20\%, затем к полученной сумме прибавляется комиссия бронирования 5\% и залог. Результат отображается в модальном окне в реальном времени по мере выбора дат. Фрагмент расчёта стоимости представлен на рисунке \ref{update_rental_summary:image}.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=Html]
+	const basePricePerDay = Number(currentRentalItem?.price_per_day || 0);
+	const platformMarkupRate = 0.20;
+	const pricePerDayWithMarkup =
+	Math.round(basePricePerDay * (1 + platformMarkupRate) * 100) / 100;
+	const rentAmountWithMarkup = pricePerDayWithMarkup * days;
+	const bookingFeeRate = 0.05;
+	const bookingFee =
+	Math.round(rentAmountWithMarkup * bookingFeeRate * 100) / 100;
+	const deposit = Number(currentRentalItem?.deposit ?? 0);
+	const total = rentAmountWithMarkup + bookingFee + deposit;
+\end{lstlisting}  
+\caption{Функция updateRentalSummary}
+\label{update_rental_summary:image}
+\end{figure}
+
+После выбора дат пользователь нажимает кнопку отправки заявки, и функция createBookingRequest передаёт данные бронирования на сервер. В запросе содержатся идентификатор объявления, даты начала и окончания аренды, а также выбранный пункт самовывоза. При успешном создании бронирования интерфейс обновляется без перезагрузки страницы.
+
+\subsubsection{Модуль договоров и демонстрационного подписания ЭЦП}
+
+Модуль договоров обеспечивает формирование, просмотр и подписание договора аренды. Функция renderContractModal отображает модальное окно с текстом договора, сводкой по сделке и полями для ввода данных подписанта. Подписание выполняется через функцию signContractWithDemoEds, которая передаёт на сервер имя подписанта и PIN демонстрационного сертификата. Фрагмент функции подписания представлен на рисунке ~\ref{fig:render_contract_modal}.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=Html]
+	async function signContractWithDemoEds(contractId, signerName,
+	certificatePin) {
+		try {
+			const response = await apiRequest(
+			`/contracts/${contractId}/sign/`,
+			{
+				method: 'POST',
+				body: JSON.stringify({
+					signer_name: signerName,
+					certificate_pin: certificatePin,
+				})
+			}
+			);
+			if (!response.ok) {
+				const message = await readApiError(response,
+				'Не удалось подписать договор.');
+				return { success: false, data: { error: message } };
+			}
+			const data = await response.json().catch(() => ({}));
+			return { success: response.ok, data };
+		} catch (error) {
+			return { success: false,
+				data: { error: 'Ошибка подключения.' } };
+		}
+	}
+\end{lstlisting}  
+\caption{Функция renderContractModal}
+\label{fig:render_contract_modal}
+\end{figure}
+
+
+
+После того как обе стороны выполнили подписание, сервер отмечает договор как полностью подписанный и открывает возможность оплаты. Интерфейс отображает состояние подписи каждой из сторон, включая дату и имя подписанта.
+
+\subsubsection{Модуль чатов}
+
+Для обеспечения обмена сообщениями в реальном времени в модуле чатов используется WebSocket-соединение. При открытии страницы чата функция showChatPage устанавливает подключение к серверу по адресу /ws/chat/{conversationId}/?token=..., где в качестве параметра передаётся JWT access-токен. Фрагмент кода установки соединения представлен на рисунке ~\ref{fig:show_chat_page}.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=Html]
+	const token = getAccessToken();
+	const wsUrl = `${WS_BASE}/chat/${conversationId}/?token=${token}`;
+	if (wsConnection) wsConnection.close();
+	wsConnection = new WebSocket(wsUrl);
+	
+	wsConnection.onmessage = (event) => {
+		const data = JSON.parse(event.data);
+		if (data.event === 'new_message' && data.message) {
+			const message = data.message;
+			messagesContainer.insertAdjacentHTML(
+			'beforeend',
+			renderSingleMessage(
+			message,
+			message.sender_id == localStorage.getItem('user_id')
+			)
+			);
+			messagesContainer.scrollTop =
+			messagesContainer.scrollHeight;
+			refreshNavCounters();
+		}
+	};
+\end{lstlisting}  
+\caption{Функция showChatPage}
+\label{fig:show_chat_page}
+\end{figure}
+
+
+
+При получении сервером нового события new\_message фронтенд добавляет сообщение в окно переписки и прокручивает его к последнему сообщению без перезагрузки страницы. При закрытии чата соединение разрывается корректно с помощью функции teardownActiveChatState.
+
+\subsubsection{Модуль уведомлений}
+
+Системные уведомления реализованы с применением двух механизмов. Основным является WebSocket-канал /ws/notifications/, который обеспечивает мгновенную доставку уведомлений об операциях в системе. В качестве резервного механизма предусмотрен периодический опрос REST-endpoint /api/notifications/ с интервалом 10 секунд при отсутствии активного WebSocket-соединения. При разрыве WebSocket-соединения функция scheduleNotificationSocketReconnect автоматически планирует повторное подключение. Уведомления отображаются в виде всплывающих toast-сообщений в правом нижнем углу экрана, счётчик непрочитанных обновляется в навигационной панели.
+
+\subsubsection{Модуль валидации форм на стороне клиента}
+
+В форме регистрации реализована клиентская валидация реквизитов пользователя, зеркалирующая логику серверных валидаторов. Для ИНН выполняется проверка длины (10 цифр — юридическое лицо, 12 цифр — физическое лицо или ИП) и проверка контрольных цифр по установленному алгоритму. Для ОГРНИП проверяется соответствие формату из 15 цифр и корректность контрольной цифры по остатку от деления на 13. Для КПП проверяется формат из 9 символов. Такой подход позволяет выявлять ошибки ввода до отправки запроса к серверу, снижая нагрузку на API и обеспечивая мгновенную обратную связь пользователю.
+
+Дополнительно в форме регистрации реализовано подтверждение адреса электронной почты: до завершения регистрации пользователь обязан ввести шестизначный код, отправленный на указанный email. Кнопка завершения регистрации остаётся заблокированной до подтверждения email и принятия условий использования площадки.
+
+\subsection{Тестирование клиентской части}
+\subsubsection{Модульное тестирование}
+
+Для проверки корректности серверной логики, с которой взаимодействует клиентская часть, были разработаны модульные тесты на языке Python с использованием встроенного фреймворка Django TestCase. Тесты охватывают модели данных, сериализаторы и бизнес-логику, обеспечивая корректность ответов API, получаемых фронтендом.
+
+Класс BookingModelTest проверяет корректность расчёта стоимости бронирования, невозможность самоаренды (когда арендатор совпадает с владельцем вещи), обнаружение пересекающихся периодов бронирования, неизменность суммы при изменении цены объявления после создания брони, а также корректность работы с отзывами. Фрагмент теста представлен на рисунке~\ref{booking_model_test:image}.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=Python]
+	class BookingModelTest(TestCase):
+	def setUp(self):
+	self.owner = User.objects.create_user(
+	username='owner', password='12345',
+	email='owner@test.com', profile_completed=True)
+	self.renter = User.objects.create_user(
+	username='renter', password='12345',
+	email='renter@test.com', profile_completed=True)
+	self.item = Item.objects.create(
+	title='Drill', price_per_day=1000,
+	owner=self.owner, status='available')
+	
+	def test_booking_total_price_calculation(self):
+	booking = Booking.objects.create(
+	item=self.item, renter=self.renter,
+	start_date=date(2025, 6, 1),
+	end_date=date(2025, 6, 4))
+	self.assertEqual(booking.total_price, 3000)
+	
+	def test_cannot_book_own_item(self):
+	with self.assertRaises(Exception):
+	Booking.objects.create(
+	item=self.item, renter=self.owner,
+	start_date=date(2025, 6, 1),
+	end_date=date(2025, 6, 3))
+	
+	def test_booking_date_overlap(self):
+	Booking.objects.create(
+	item=self.item, renter=self.renter,
+	start_date=date(2025, 6, 1),
+	end_date=date(2025, 6, 5))
+	with self.assertRaises(Exception):
+	Booking.objects.create(
+	item=self.item, renter=self.renter,
+	start_date=date(2025, 6, 3),
+	end_date=date(2025, 6, 7))
+\end{lstlisting}  
+\caption{Тестирование}
+\label{booking_model_test:image}
+\end{figure}
+
+Результаты тестов выше представлены на рисунке ~\ref{unitUser:image}.
+\begin{figure}[H]
+\begin{lstlisting}[language=Python]
+	Found 5 test(s).
+	Creating test database for alias ‘default’...
+	System check identified no issues (0 silenced).
+	.....
+	----------------------------------------------------------------------
+	Ran 5 tests in 0.312s
+	
+	OK
+\end{lstlisting}  
+\caption{Результаты тестирования}
+\label{unitUser:image}
+\end{figure}
+
+\subsubsection{Системное тестирование}
+
+Системное тестирование клиентской части проводилось путём ручной проверки всех пользовательских сценариев, определённых в разделе 2.4. Тестирование выполнялось в браузерах Google Chrome 124 и Mozilla Firefox 125 на операционных системах Windows 10 и Windows 11. Результаты тестирования представлены в таблице ~\ref{tab:sys_test}.
+
+\begin{xltabular}{\textwidth}{|c|X|X|X|}
+	\caption{Результаты системного тестирования \label{tab:sys_test}}\\ \hline
+	\centrow № & \centrow Проверяемый сценарий & \centrow Ожидаемый результат & \centrow Фактический результат \\ \hline
+	\endfirsthead
+	\continuecaption{Продолжение таблицы \ref{tab:sys_test}}
+	~\centrow № & \centrow Проверяемый сценарий & \centrow Ожидаемый результат & \centrow Фактический результат \\ \hline
+	\finishhead
+	\leftrow 1 & \leftrow Регистрация с подтверждением email и выбором типа пользователя & \leftrow Создание учётной записи, автоматический вход & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 2 & \leftrow Авторизация с последующим сохранением сессии при перезагрузке страницы & \leftrow Пользователь остаётся авторизованным & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 3 & \leftrow Восстановление пароля через код на email & \leftrow Новый пароль принят, сессия сброшена & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 4 & \leftrow Фильтрация каталога по категории и доступности дат & \leftrow Отображаются только подходящие объявления & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 5 & \leftrow Создание объявления с загрузкой изображений & \leftrow Объявление создано, изображения привязаны & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 6 & \leftrow Создание бронирования с автоматическим расчётом стоимости & \leftrow Заявка создана, стоимость рассчитана корректно & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 7 & \leftrow Подтверждение и отклонение входящей заявки на аренду & \leftrow Статус бронирования изменён, уведомление отправлено & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 8 & \leftrow Подписание договора аренды обеими сторонами & \leftrow Договор отмечен как подписанный & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 9 & \leftrow Демонстрационная оплата через механизм СБП & \leftrow Статус оплаты изменён на paid & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 10 & \leftrow Обмен сообщениями в чате с отправкой изображения & \leftrow Сообщение доставлено в реальном времени через WebSocket & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 11 & \leftrow Создание отзыва по завершённому бронированию & \leftrow Отзыв сохранён, рейтинг пересчитан & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 12 & \leftrow Просмотр статистики в личном кабинете & \leftrow Отображены корректные данные о доходах и бронированиях & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 13 & \leftrow Отображение интерфейса на мобильном устройстве (ширина 375 px) & \leftrow Все элементы корректно перестраиваются под узкий экран & \leftrow Соответствует ожидаемому \\ \hline
+	\leftrow 14 & \leftrow Валидация ИНН и ОГРНИП на стороне клиента & \leftrow Некорректные значения отклоняются до отправки запроса & \leftrow Соответствует ожидаемому \\ \hline
+\end{xltabular}
+
+По результатам системного тестирования все проверяемые сценарии дали результат, соответствующий ожидаемому. Ошибок в работе пользовательского интерфейса, некорректного отображения данных и сбоев при взаимодействии с серверным API выявлено не было.
+
+\subsection{Сборка и развёртывание клиентской части}
+Клиентская часть не требует этапа сборки и не использует систем управления пакетами (npm, Webpack, Vite). Приложение представляет собой один HTML-файл index.html, включающий встроенные стили CSS и блок JavaScript, что обеспечивает простоту развёртывания и отсутствие зависимостей от инструментов сборки.
+
+Для корректной работы клиентской части необходимо выполнение следующих условий:
+\begin{enumerate}
+\item Cерверная часть на Django запущена и предоставляет доступ к REST API и WebSocket-маршрутам.
+\item Веб-сервер Nginx настроен для раздачи статических файлов клиентской части и проксирования запросов к Django.
+\item Браузер пользователя поддерживает стандарты HTML5, CSS3, JavaScript ES6+, Fetch API, LocalStorage и WebSocket (Google Chrome версии 90+, Mozilla Firefox версии 88+, Microsoft Edge версии 90+).
+\end{enumerate}
+
+Развёртывание всех компонентов серверной части (Django, PostgreSQL, Redis, Nginx) выполняется с использованием Docker и Docker Compose, что обеспечивает идентичность окружений на этапах разработки и эксплуатации. Файл index.html помещается в директорию статических файлов, откуда Nginx отдаёт его напрямую. Базовый адрес API задаётся в константе API\_BASE внутри JavaScript-блока файла index.html и при необходимости меняется перед развёртыванием на конкретный домен.

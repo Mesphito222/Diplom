@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аренда вещей</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app"></div>
+    <div class="site-toast-stack" id="siteToastStack"></div>
+
+    <div class="item-preview-overlay" id="itemPreviewOverlay">
+        <div class="item-preview-modal">
+            <div class="item-preview-header">
+                <div>
+                    <div class="item-preview-title" id="itemPreviewTitle">Объявление</div>
+                    <div class="item-preview-subtitle" id="itemPreviewSubtitle">Подробная информация о товаре</div>
+                </div>
+                <button class="rent-close-btn" id="itemPreviewCloseBtn" type="button">×</button>
+            </div>
+            <div id="itemPreviewContent"></div>
+        </div>
+    </div>
+
+    <div class="rent-modal-overlay" id="rentModalOverlay">
+        <div class="rent-modal">
+            <div class="rent-modal-header">
+                <div>
+                    <div class="rent-modal-title" id="rentModalTitle">Оформление аренды</div>
+                    <div class="rent-modal-subtitle">Выберите даты аренды, подпишите договор и только после этого переходите к оплате</div>
+                </div>
+                <button class="rent-close-btn" id="rentModalCloseBtn" type="button">×</button>
+            </div>
+
+            <div id="rentModalMessage"></div>
+
+            <div class="form-group">
+                <label for="rentStartDate">Дата начала аренды</label>
+                <input type="text" id="rentStartDate" placeholder="Выберите дату начала">
+            </div>
+
+            <div class="form-group">
+                <label for="rentEndDate">Дата окончания аренды</label>
+                <input type="text" id="rentEndDate" placeholder="Выберите дату окончания">
+            </div>
+
+            <div class="pickup-section">
+                <label>📦 Место самовывоза — Почта России (г. Курск)</label>
+                <div class="pickup-search-wrap">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="pickupSearchInput" class="pickup-search" placeholder="Поиск по адресу или индексу..." autocomplete="off">
+                </div>
+                <div class="pickup-list" id="pickupList"></div>
+                <div class="pickup-selected-info" id="pickupSelectedInfo"></div>
+            </div>
+
+            <div class="rent-summary">
+                <div class="rent-summary-row">
+                    <span>Товар</span>
+                    <span id="rentSummaryItem">—</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Цена за день</span>
+                    <span id="rentSummaryPrice">—</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Количество дней</span>
+                    <span id="rentSummaryDays">0</span>
+                </div>
+                <div class="rent-summary-row" style="color:#6b8b9c;font-size:0.88rem;">
+                    <span>Комиссия платформы (20%)</span>
+                    <span id="rentSummaryMarkup">—</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Сумма аренды</span>
+                    <span id="rentSummaryTotal">0 ₽</span>
+                </div>
+                <div class="rent-summary-row" style="color:#6b8b9c;font-size:0.88rem;">
+                    <span>Сервисный сбор (5%)</span>
+                    <span id="rentSummaryFee">—</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Залог (возвращается)</span>
+                    <span id="rentSummaryDeposit">—</span>
+                </div>
+                <div class="rent-summary-row total">
+                    <span>Итого к оплате</span>
+                    <span id="rentSummaryGrandTotal">0 ₽</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Статус брони</span>
+                    <span id="rentSummaryStatus">Не создана</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Статус залога</span>
+                    <span id="rentSummaryDepositStatus">—</span>
+                </div>
+            </div>
+
+            <div class="rent-payment-actions">
+                <button class="btn-outline" id="createBookingBtn" type="button">Отправить заявку</button>
+                <button class="btn-primary" id="openContractBtn" type="button">Подписать документ с помощью ЭЦП</button>
+                <button class="btn-primary is-hidden" id="startPaymentBtn" type="button">Перейти к оплате по СБП</button>
+            </div>
+
+            <div class="payment-box" id="paymentBox">
+                <div class="payment-row">
+                    <strong>Банк</strong>
+                    <span id="paymentBank">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Получатель</strong>
+                    <span id="paymentRecipient">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Телефон</strong>
+                    <span id="paymentPhone">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Сумма</strong>
+                    <span id="paymentAmount">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Статус оплаты</strong>
+                    <span id="paymentStatus">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Истекает</strong>
+                    <span id="paymentExpires">—</span>
+                </div>
+
+                <button class="btn-primary payment-link" id="paymentLinkBtn" type="button" disabled>Открыть демо-оплату СБП</button>
+
+                <div class="payment-code" id="paymentQrPayload"></div>
+            </div>
+
+            <div class="rent-note">
+                Это учебный демо-сценарий: после подтверждения брони арендатор сначала подписывает договор демо-ЭЦП, а затем открывает муляж оплаты по СБП.
+            </div>
+        </div>
+    </div>
+
+    <div class="sbp-demo-overlay" id="sbpDemoOverlay">
+        <div class="sbp-demo-modal">
+            <div class="sbp-demo-header">
+                <div class="sbp-demo-title">Оплата через СБП</div>
+                <div class="sbp-demo-subtitle">Демо-экран оплаты.</div>
+            </div>
+            <div class="sbp-demo-body">
+                <div class="sbp-demo-badge">СБП Demo</div>
+                <div class="sbp-demo-grid">
+                    <div class="sbp-demo-row">
+                        <strong>Банк</strong>
+                        <span id="sbpDemoBank">—</span>
+                    </div>
+                    <div class="sbp-demo-row">
+                        <strong>Получатель</strong>
+                        <span id="sbpDemoRecipient">—</span>
+                    </div>
+                    <div class="sbp-demo-row">
+                        <strong>Телефон</strong>
+                        <span id="sbpDemoPhone">—</span>
+                    </div>
+                    <div class="sbp-demo-row">
+                        <strong>Сумма</strong>
+                        <span id="sbpDemoAmount">—</span>
+                    </div>
+                </div>
+                <div class="sbp-demo-qr" id="sbpDemoQrPayload"></div>
+                <div class="sbp-demo-message" id="sbpDemoMessage"></div>
+                <div class="sbp-demo-actions">
+                    <button class="btn-primary" id="sbpDemoPayBtn" type="button">Оплатить</button>
+                    <button class="btn-outline" id="sbpDemoCancelBtn" type="button">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ===== Модальные окна правовых документов ===== -->
+    <div class="legal-modal-overlay" id="termsModalOverlay">
+        <div class="legal-modal">
+            <div class="legal-modal-header">
+                <div class="legal-modal-title">Условия использования площадки</div>
+                <button class="legal-modal-close" id="termsModalClose" type="button">×</button>
+            </div>
+            <div class="legal-modal-body">
+                <h3>1. Общие положения</h3>
+                <p>Настоящие Условия использования (далее — Условия) регулируют отношения между онлайн-площадкой Arenda (далее — Платформа) и пользователями, осуществляющими аренду движимого имущества через Платформу.</p>
+                <p>Использование Платформы означает полное и безоговорочное принятие настоящих Условий.</p>
+                <h3>2. Предмет услуги</h3>
+                <p>Платформа предоставляет возможность физическим лицам, индивидуальным предпринимателям и юридическим лицам размещать объявления об аренде движимого имущества и заключать договоры проката.</p>
+                <h3>3. Комиссия и расчёты</h3>
+                <ol>
+                    <li>Платформа взимает комиссию 20% от цены аренды за день, устанавливаемой арендодателем. Комиссия включается в цену, отображаемую арендатору.</li>
+                    <li>При оформлении бронирования взимается дополнительный сервисный сбор 5% от итоговой суммы аренды.</li>
+                    <li>Залог устанавливается арендодателем и возвращается арендатору после подтверждения возврата имущества в надлежащем состоянии.</li>
+                </ol>
+                <h3>4. Права и обязанности пользователей</h3>
+                <ol>
+                    <li>Арендодатель обязуется предоставлять достоверную информацию об имуществе и обеспечивать его передачу в исправном состоянии.</li>
+                    <li>Арендатор обязуется использовать имущество по назначению и возвращать его в состоянии не хуже исходного.</li>
+                    <li>Обе стороны обязуются подписывать договор аренды с использованием демонстрационной ЭЦП до начала оплаты.</li>
+                </ol>
+                <h3>5. Ответственность</h3>
+                <p>Платформа выступает посредником и не несёт ответственности за ненадлежащее исполнение договора аренды его сторонами. Споры между сторонами разрешаются в соответствии с действующим законодательством РФ.</p>
+                <h3>6. Заключительные положения</h3>
+                <p>Платформа оставляет за собой право изменять настоящие Условия с уведомлением пользователей. Продолжение использования Платформы после изменений означает согласие с обновлёнными Условиями.</p>
+            </div>
+            <div class="legal-modal-footer">
+                <button class="btn-primary" id="termsModalAccept" type="button">Понятно</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="legal-modal-overlay" id="privacyModalOverlay">
+        <div class="legal-modal">
+            <div class="legal-modal-header">
+                <div class="legal-modal-title">Соглашение на обработку персональных данных</div>
+                <button class="legal-modal-close" id="privacyModalClose" type="button">×</button>
+            </div>
+            <div class="legal-modal-body">
+                <h3>1. Оператор персональных данных</h3>
+                <p>Оператором персональных данных является онлайн-площадка Arenda, действующая в соответствии с Федеральным законом № 152-ФЗ «О персональных данных».</p>
+                <h3>2. Состав персональных данных</h3>
+                <p>В ходе регистрации и использования Платформы могут обрабатываться следующие персональные данные:</p>
+                <ul>
+                    <li>Фамилия, имя, отчество</li>
+                    <li>Адрес электронной почты и номер телефона</li>
+                    <li>Серия и номер паспорта (для физических лиц)</li>
+                    <li>ИНН, КПП, ОГРН/ОГРНИП (для ИП и юридических лиц)</li>
+                    <li>Сведения о заключённых договорах аренды</li>
+                </ul>
+                <h3>3. Цели обработки</h3>
+                <ol>
+                    <li>Идентификация пользователей и обеспечение работы Платформы.</li>
+                    <li>Заключение и исполнение договоров аренды между пользователями.</li>
+                    <li>Формирование договоров с использованием демонстрационной ЭЦП.</li>
+                    <li>Направление уведомлений, связанных с бронированиями и платежами.</li>
+                </ol>
+                <h3>4. Передача данных третьим лицам</h3>
+                <p>Персональные данные не передаются третьим лицам без согласия субъекта, за исключением случаев, предусмотренных законодательством РФ.</p>
+                <h3>5. Хранение и защита</h3>
+                <p>Данные хранятся на защищённых серверах. Платформа принимает технические и организационные меры для защиты персональных данных от несанкционированного доступа.</p>
+                <h3>6. Права субъекта данных</h3>
+                <p>Вы вправе запросить доступ к своим данным, их исправление или удаление, направив запрос через форму обратной связи на Платформе.</p>
+                <h3>7. Срок действия согласия</h3>
+                <p>Настоящее согласие действует с момента регистрации до удаления аккаунта пользователем или истечения 5 лет с последней активности.</p>
+            </div>
+            <div class="legal-modal-footer">
+                <button class="btn-primary" id="privacyModalAccept" type="button">Понятно</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Модальное окно передачи / возврата / СБП-возврата / отказа ===== -->
+    <div class="handover-overlay" id="handoverOverlay">
+        <div class="handover-modal">
+            <div class="handover-modal-title" id="handoverModalTitle">Подтверждение</div>
+            <div class="handover-modal-sub" id="handoverModalSub"></div>
+            <!-- Поле загрузки фото (показывается если нужно) -->
+            <div id="handoverPhotoSection">
+                <label class="handover-photo-label" for="handoverPhotoInput">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    <span id="handoverPhotoLabelText">Прикрепить фото товара (обязательно)</span>
+                </label>
+                <input type="file" id="handoverPhotoInput" accept="image/*" style="display:none">
+                <img class="handover-photo-preview" id="handoverPhotoPreview" alt="Предпросмотр фото">
+                <div class="handover-photo-name" id="handoverPhotoName"></div>
+            </div>
+            <!-- Текстовое поле (для возврата/отказа) -->
+            <div id="handoverReasonSection" style="display:none">
+                <textarea class="handover-reason-input" id="handoverReasonInput" placeholder="Опишите причину..."></textarea>
+            </div>
+            <div class="handover-actions">
+                <button class="btn-primary" id="handoverConfirmBtn" type="button">Подтвердить</button>
+                <button class="btn-outline" id="handoverCancelBtn" type="button">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="contract-modal-overlay" id="contractModalOverlay">
+        <div class="contract-modal">
+            <div id="contractModalContent"></div>
+        </div>
+    </div>
+
+    <div class="support-chat-panel" id="supportChatPanel" aria-hidden="true">
+        <div class="support-chat-header">
+            <div class="support-chat-header-top">
+                <div class="support-chat-title">Помощник аренды</div>
+                <button class="support-chat-close" id="supportChatCloseBtn" type="button" aria-label="Закрыть чат">×</button>
+            </div>
+            <div class="support-chat-subtitle">Быстрые ответы по ключевым функциям сайта.</div>
+        </div>
+        <div class="support-chat-body">
+            <div class="support-chat-messages" id="supportChatMessages"></div>
+            <div class="support-questions-label">Частые вопросы</div>
+            <div class="support-questions" id="supportQuestions"></div>
+            <div class="support-chat-note">Выберите готовый вопрос выше, и бот покажет пошаговую инструкцию.</div>
+        </div>
+    </div>
+
+    <button class="support-chat-toggle" id="supportChatToggleBtn" type="button" aria-label="Открыть чат поддержки">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 9.5h10M7 13h7m-7 6 2.9-2.2c.38-.29.57-.43.79-.53.19-.09.39-.15.6-.18.24-.03.47-.03.93-.03H16.8c1.68 0 2.52 0 3.16-.33a3 3 0 0 0 1.31-1.31c.33-.64.33-1.48.33-3.16V8.2c0-1.68 0-2.52-.33-3.16a3 3 0 0 0-1.31-1.31C19.32 3.4 18.48 3.4 16.8 3.4H7.2c-1.68 0-2.52 0-3.16.33A3 3 0 0 0 2.73 5.04C2.4 5.68 2.4 6.52 2.4 8.2v4.6c0 1.68 0 2.52.33 3.16a3 3 0 0 0 1.31 1.31c.46.24 1.03.31 1.96.33Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <script src="utils.js"></script>
+<script src="auth.js"></script>
+<script src="items.js"></script>
+<script src="bookings.js"></script>
+<script src="chat.js"></script>
+<script src="notifications.js"></script>
+<script src="support.js"></script>
+</body>
+</html>
